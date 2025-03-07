@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "FaceCheck",
+    "slug": "facecheck-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/splash.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#3B4B8C"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.robotbulls.facecheck"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/splash.png",
+        "backgroundColor": "#3B4B8C"
+      },
+      "package": "com.robotbulls.facecheck"
+    },
+    "web": {
+      "favicon": "./assets/splash.png"
+    }
+  }
+}
