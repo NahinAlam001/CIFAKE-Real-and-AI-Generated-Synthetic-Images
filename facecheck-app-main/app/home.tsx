@@ -24,9 +24,9 @@ export default function HomeScreen() {
 
   const handleProfile = () => {
     setShowMenu(false);
+    router.push("/profile");
     // Navigate to profile screen
     console.log("Navigate to profile");
-    router.push("/profile");
   };
 
   const openCamera = async () => {
@@ -158,14 +158,10 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.cameraButton} onPress={openCamera}>
-          <Ionicons name="camera" size={32} color="#FFFFFF" />
+          <Ionicons name="camera" size={32} color="white" />
         </TouchableOpacity>
 
-        {/* Update this Profile TouchableOpacity */}
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/profile")} // This is the update
-        >
+        <TouchableOpacity style={styles.navItem} onPress={handleProfile}>
           <Ionicons name="person-outline" size={24} color="#6B7280" />
           <Text style={styles.navText}>Profile</Text>
         </TouchableOpacity>

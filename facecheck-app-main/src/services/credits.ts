@@ -17,20 +17,20 @@ export type PurchaseResult = {
 // Mock data for UI development
 const MOCK_CREDIT_PACKAGES: CreditPackage[] = [
   {
-    id: "1",
+    id: '1',
     credits: 50,
-    price: 9.0,
+    price: 9.00,
     isBestValue: true,
   },
   {
-    id: "2",
+    id: '2',
     credits: 10,
     price: 4.99,
   },
   {
-    id: "3",
+    id: '3',
     credits: 20,
-    price: 9.0,
+    price: 9.00,
   },
 ];
 
@@ -59,41 +59,39 @@ export const getUserCredits = async (): Promise<number> => {
 // Purchase credits
 export const purchaseCredits = async (
   packageId: string,
-  paymentMethod: "apple_pay" | "google_pay" | "credit_card"
+  paymentMethod: 'apple_pay' | 'google_pay' | 'credit_card'
 ): Promise<PurchaseResult> => {
   // This will be replaced with actual payment processing
   console.log(`Processing ${paymentMethod} payment for package ${packageId}`);
-
+  
   try {
     // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     // Find the package
-    const selectedPackage = MOCK_CREDIT_PACKAGES.find(
-      (pkg) => pkg.id === packageId
-    );
+    const selectedPackage = MOCK_CREDIT_PACKAGES.find(pkg => pkg.id === packageId);
     if (!selectedPackage) {
       return {
         success: false,
-        error: "Package not found",
+        error: 'Package not found'
       };
     }
-
+    
     // Mock successful purchase
     const currentCredits = await getUserCredits();
     const newTotalCredits = currentCredits + selectedPackage.credits;
-
+    
     return {
       success: true,
       transactionId: `mock-transaction-${Date.now()}`,
       credits: selectedPackage.credits,
-      totalCredits: newTotalCredits,
+      totalCredits: newTotalCredits
     };
   } catch (error) {
-    console.error("Payment failed:", error);
+    console.error('Payment failed:', error);
     return {
       success: false,
-      error: "Payment processing failed",
+      error: 'Payment processing failed'
     };
   }
 };
@@ -102,21 +100,21 @@ export const purchaseCredits = async (
 export const useCredits = async (amount: number): Promise<boolean> => {
   // This will be replaced with an actual API call
   console.log(`Using ${amount} credits`);
-
+  
   try {
     const currentCredits = await getUserCredits();
-
+    
     if (currentCredits < amount) {
-      console.error("Not enough credits");
+      console.error('Not enough credits');
       return false;
     }
-
+    
     // Simulate API call to deduct credits
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     return true;
   } catch (error) {
-    console.error("Failed to use credits:", error);
+    console.error('Failed to use credits:', error);
     return false;
   }
-};
+}; 
