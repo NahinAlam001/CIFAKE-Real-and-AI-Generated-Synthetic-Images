@@ -139,7 +139,7 @@ export default function HomeScreen() {
           {selectedImage && (
             <TouchableOpacity
               style={styles.findButton}
-              onPress={() => console.log("Finding people...")}
+              onPress={() => router.push("/summary")}
             >
               <Text style={styles.findButtonText}>Find People</Text>
             </TouchableOpacity>

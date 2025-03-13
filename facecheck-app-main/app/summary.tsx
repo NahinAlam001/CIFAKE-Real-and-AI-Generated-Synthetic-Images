@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 // Mock Data for the page (you can replace it with actual data later)
 const profile = {
@@ -15,7 +16,7 @@ const profile = {
   occupation: "XYZ",
   awards: "XYZ",
   bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-  imageUri: "https://your-image-url.com/image.jpg", // Replace with the actual URL or local image path
+  imageUri: "", // Leave it empty for testing placeholder
   usedCredits: 1,
   remainingCredits: 19,
 };
@@ -28,31 +29,29 @@ export default function Page() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.profileContainer}>
-        {/* Profile Image */}
-        <Image source={{ uri: profile.imageUri }} style={styles.profileImage} />
-        <Text style={styles.name}>{profile.name}</Text>
-        <Text style={styles.occupation}>Occupation: {profile.occupation}</Text>
-        <Text style={styles.awards}>Awards: {profile.awards}</Text>
-      </View>
-
-      <View style={styles.bioContainer}>
-        <Text style={styles.bio}>{profile.bio}</Text>
-      </View>
-
-      <View style={styles.creditSection}>
-        <View style={styles.creditDetails}>
-          <Ionicons name="ios-cash" size={32} color="#F59E0B" />
-          <View style={styles.creditInfo}>
-            <Text style={styles.creditLabel}>
-              Used credits: {profile.usedCredits}
-            </Text>
-            <Text style={styles.creditLabel}>
-              Remaining: {profile.remainingCredits}
-            </Text>
-            <Text style={styles.creditDetail}>1 Credit = 1 Face Detection</Text>
+      <View style={styles.card}>
+        {/* Profile Image or Placeholder */}
+        {profile.imageUri ? (
+          <Image
+            source={{ uri: profile.imageUri }}
+            style={styles.profileImage}
+          />
+        ) : (
+          <View style={styles.placeholderImage}>
+            <Ionicons name="person-circle-outline" size={100} color="#6B7280" />
           </View>
+        )}
+
+        <View style={styles.profileDetails}>
+          <Text style={styles.name}>{profile.name}</Text>
+          <Text style={styles.occupation}>
+            Occupation: {profile.occupation}
+          </Text>
+          <Text style={styles.awards}>Awards: {profile.awards}</Text>
         </View>
+
+        {/* Bio Section */}
+        <Text style={styles.bio}>{profile.bio}</Text>
       </View>
 
       {/* Try Again Section */}
@@ -89,21 +88,40 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F9FAFB",
   },
-  profileContainer: {
-    alignItems: "center",
-    padding: 20,
+  card: {
     backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    margin: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  placeholderImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#E5E7EB", // Light gray placeholder background
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+    alignSelf: "center",
+  },
+  profileDetails: {
+    alignItems: "center",
     marginBottom: 16,
   },
   name: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "600",
     color: "#000",
   },
@@ -114,37 +132,11 @@ const styles = StyleSheet.create({
   awards: {
     fontSize: 16,
     color: "#6B7280",
-    marginBottom: 16,
-  },
-  bioContainer: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
   },
   bio: {
-    fontSize: 16,
-    color: "#4B5563",
-  },
-  creditSection: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    marginTop: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  creditDetails: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  creditInfo: {
-    marginLeft: 12,
-  },
-  creditLabel: {
-    fontSize: 16,
-    color: "#6B7280",
-  },
-  creditDetail: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: "#4B5563",
+    textAlign: "center",
   },
   actionContainer: {
     alignItems: "center",
@@ -167,6 +159,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   bottomNav: {
+    marginTop: "auto",
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 24,
