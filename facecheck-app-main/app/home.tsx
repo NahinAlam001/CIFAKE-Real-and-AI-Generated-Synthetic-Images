@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -6,33 +7,26 @@ import {
   SafeAreaView,
   Modal,
   Image,
+  ActivityIndicator,
 } from "react-native";
-import { Link, router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
+import * as FileSystem from "expo-file-system";
+import { useRouter } from "expo-router";
+
+const API_URL = "https://x7rkc2ymrgyc2c-8000.proxy.runpod.net/detect-faces/";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [faceResult, setFaceResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogout = () => {
-    setShowMenu(false);
-    router.replace("/");
-  };
-
-  const handleProfile = () => {
-    setShowMenu(false);
-    router.push("/profile");
-    // Navigate to profile screen
-    console.log("Navigate to profile");
-  };
-
+  // Camera function
   const openCamera = async () => {
-    // Request camera permission
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
     if (permissionResult.granted === false) {
       alert("You've refused to allow this app to access your camera!");
       return;
@@ -40,21 +34,23 @@ export default function HomeScreen() {
 
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      quality: 1,
+      quality: 0.8,
+      exif: false,
+      base64: false,
     });
 
     if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
-      // Here you would typically upload the image to your backend
-      console.log("Camera image:", result.assets[0].uri);
+      const asset = result.assets[0];
+      setSelectedImage({
+        uri: asset.uri,
+        type: asset.mimeType || "image/jpeg",
+      });
     }
   };
 
   const openGallery = async () => {
-    // Request media library permission
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
-
     if (permissionResult.granted === false) {
       alert("You've refused to allow this app to access your photos!");
       return;
@@ -62,21 +58,68 @@ export default function HomeScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
-      quality: 1,
+      quality: 0.8,
+      exif: false,
+      base64: false,
     });
 
     if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
-      // Here you would typically upload the image to your backend
-      console.log("Gallery image:", result.assets[0].uri);
+      const asset = result.assets[0];
+      setSelectedImage({
+        uri: asset.uri,
+        type: asset.mimeType || "image/jpeg",
+      });
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!selectedImage) {
+      alert("Please select an image first!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setFaceResult(null);
+
+      // Get the local file URI
+      const fileUri = selectedImage.uri;
+
+      // Create FormData with proper file structure
+      const formData = new FormData();
+      formData.append("file", {
+        uri: fileUri,
+        name: `photo.${selectedImage.type.split("/")[1] || "jpg"}`,
+        type: selectedImage.type || "image/jpeg",
+      });
+
+      const response = await axios.post(API_URL, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
+        timeout: 60000,
+      });
+
+      if (response.status === 200) {
+        router.push({
+          pathname: "/result",
+          params: { result: JSON.stringify(response.data) },
+        });
+      }
+    } catch (error) {
+      console.error("Full error:", error);
+      alert(
+        error.response?.data?.detail ||
+          "Server error. Please try a different image."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.headerRight}
@@ -87,7 +130,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Profile Menu Modal */}
       <Modal
         visible={showMenu}
         transparent={true}
@@ -100,14 +142,12 @@ export default function HomeScreen() {
           onPress={() => setShowMenu(false)}
         >
           <View style={[styles.menuContainer, { top: 70, right: 20 }]}>
-            <TouchableOpacity style={styles.menuItem} onPress={handleProfile}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => {}}>
               <Ionicons name="person-outline" size={20} color="#1F2937" />
               <Text style={styles.menuText}>Profile</Text>
             </TouchableOpacity>
 
-            <View style={styles.menuDivider} />
-
-            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => {}}>
               <Ionicons name="log-out-outline" size={20} color="#EF4444" />
               <Text style={[styles.menuText, { color: "#EF4444" }]}>
                 Logout
@@ -117,17 +157,17 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Main Content */}
       <View style={styles.content}>
         <View style={styles.uploadSection}>
           <Text style={styles.uploadText}>
             Capture a picture or upload from your device to discover about the
             person.
           </Text>
+
           <TouchableOpacity style={styles.uploadButton} onPress={openGallery}>
             {selectedImage ? (
               <Image
-                source={{ uri: selectedImage }}
+                source={{ uri: selectedImage.uri }}
                 style={styles.selectedImage}
                 resizeMode="contain"
               />
@@ -137,34 +177,40 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           {selectedImage && (
-            <TouchableOpacity
-              style={styles.findButton}
-              onPress={() => router.push("/summary")}
-            >
+            <TouchableOpacity style={styles.findButton} onPress={uploadImage}>
               <Text style={styles.findButtonText}>Find People</Text>
             </TouchableOpacity>
           )}
+
+          {loading && (
+            <ActivityIndicator
+              size="large"
+              color="#4F46E5"
+              style={styles.loader}
+            />
+          )}
+
+          {faceResult && (
+            <View style={styles.resultContainer}>
+              {faceResult.detail ? (
+                <Text style={[styles.resultText, { color: "red" }]}>
+                  {faceResult.detail}
+                </Text>
+              ) : (
+                <Text style={styles.resultText}>
+                  {(faceResult.face_result || "")
+                    .split("\n")
+                    .map((line, index) => (
+                      <Text key={index}>
+                        {line}
+                        {"\n"}
+                      </Text>
+                    ))}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
-      </View>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/credits")}
-        >
-          <Ionicons name="card-outline" size={24} color="#6B7280" />
-          <Text style={styles.navText}>Buy Credits</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.cameraButton} onPress={openCamera}>
-          <Ionicons name="camera" size={32} color="white" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem} onPress={handleProfile}>
-          <Ionicons name="person-outline" size={24} color="#6B7280" />
-          <Text style={styles.navText}>Profile</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -181,51 +227,10 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "center",
   },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    padding: 8,
-  },
   greeting: {
     fontSize: 16,
     fontWeight: "500",
     color: "#4F46E5",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-  },
-  menuContainer: {
-    position: "absolute",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 8,
-    minWidth: 180,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    gap: 12,
-    borderRadius: 8,
-  },
-  menuText: {
-    fontSize: 16,
-    color: "#1F2937",
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: "#E5E7EB",
-    marginVertical: 4,
   },
   content: {
     flex: 1,
@@ -265,53 +270,10 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     minHeight: 400,
   },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  navText: {
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  cameraButton: {
-    width: 64,
-    height: 64,
-    backgroundColor: "#4F46E5",
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#4F46E5",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
   selectedImage: {
     width: "100%",
     height: "100%",
     borderRadius: 12,
-    resizeMode: "contain",
   },
   findButton: {
     backgroundColor: "#1E40AF",
@@ -321,18 +283,28 @@ const styles = StyleSheet.create({
     marginTop: 24,
     width: "100%",
     alignItems: "center",
-    shadowColor: "#1E40AF",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   findButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  resultContainer: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  loader: {
+    marginTop: 20,
+  },
+  resultText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

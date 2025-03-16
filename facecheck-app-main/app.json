@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#3B4B8C"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.robotbulls.facecheck"
@@ -26,7 +24,10 @@
       "package": "com.robotbulls.facecheck"
     },
     "web": {
-      "favicon": "./assets/splash.png"
+      "favicon": "./assets/splash.png",
+      "proxy": {
+        "/detect-faces": "https://x7rkc2ymrgyc2c-8000.proxy.runpod.net"
+      }
     }
   }
 }
